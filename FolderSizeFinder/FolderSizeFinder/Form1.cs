@@ -1,12 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+//using System.ComponentModel;
+//using System.Data;
+//using System.Drawing;
+//using System.Linq;
+//using System.Text;
 using System.Windows.Forms;
-using System.IO;
+using DriveInfo = System.IO.DriveInfo;
+
+//
+//Downloaded Library to circumvent System.IO.PathTooLongException exception thrown
+//Library downloaded from https://gallery.technet.microsoft.com/DelimonWin32IO-Library-V40-7ff6b16c
+//
+using Delimon.Win32.IO;
+using DirectoryInfo = Delimon.Win32.IO.DirectoryInfo;
 
 namespace FolderSizeFinder
 {
@@ -76,7 +83,8 @@ namespace FolderSizeFinder
                 DriveInfo drive = allActiveDrives[driveIndex];
 
                 // for each directory sum the size of all the files
-                DirectoryInfo dir = drive.RootDirectory;
+                String driveroot = drive.RootDirectory.ToString();
+                DirectoryInfo dir = new DirectoryInfo(driveroot);
 
                 recurseDirectories( dir );
             }
@@ -104,20 +112,24 @@ namespace FolderSizeFinder
             // now do for all dir children
             try
             {
-                foreach ( DirectoryInfo d in dir.EnumerateDirectories() )
+                foreach ( DirectoryInfo d in dir.GetDirectories() )
                 {
                     // TODO: Add filtering of directories here
                     recurseDirectories( d );
                 }
             }
-            catch ( System.UnauthorizedAccessException )
+            catch (System.Exception)
             {
-                // no access to that folder so skip
+                // exception thrown so skip
             }
-            catch (System.IO.DirectoryNotFoundException)
-            {
-                // cannot find part of the path so skip
-            }
+//            catch ( System.UnauthorizedAccessException )
+//            {
+//                // no access to that folder so skip
+//            }
+//            catch (System.IO.DirectoryNotFoundException)
+//            {
+//               // cannot find part of the path so skip
+//            }
         }
 
         //
@@ -128,7 +140,7 @@ namespace FolderSizeFinder
             long size = 0;
             try
             {
-                foreach ( FileInfo f in dir.EnumerateFiles() )
+                foreach ( FileInfo f in dir.GetFiles() )
                 {
                     if ( f.Attributes != FileAttributes.Directory )
                     {
@@ -136,16 +148,21 @@ namespace FolderSizeFinder
                     }
                 }
             }
-            catch ( System.UnauthorizedAccessException )
+            catch (System.Exception)
             {
-                // no access to that folder so will give a size of -1
+                // Delimon exception?
                 size = -1;
             }
-            catch ( System.IO.DirectoryNotFoundException )
-            {
-                // Cannot find "part of the path", so will give a size of -1
-                size = -1;
-            }
+//            catch ( System.UnauthorizedAccessException )
+//            {
+//                // no access to that folder so will give a size of -1
+//                size = -1;
+//            }
+//            catch ( System.IO.DirectoryNotFoundException )
+//            {
+//                // Cannot find "part of the path", so will give a size of -1
+//                size = -1;
+//            }
             return size;
         }
     }
